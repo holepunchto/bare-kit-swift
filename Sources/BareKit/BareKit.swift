@@ -1,90 +1,6 @@
 import BareKitBridge
 import Foundation
 
-open class NotificationService: UNNotificationServiceExtension {
-  private let service: BareNotificationService
-
-  public override init() {
-    self.service = BareNotificationService(configuration: nil)!
-    super.init()
-  }
-
-  public init(configuration: BareWorkletConfiguration?) {
-    self.service = BareNotificationService(configuration: configuration)!
-    super.init()
-  }
-
-  public init(
-    filename: String, source: Data?, arguments: [String]?, configuration: BareWorkletConfiguration?
-  ) {
-    self.service = BareNotificationService(
-      filename: filename, source: source, arguments: arguments, configuration: configuration)!
-    super.init()
-  }
-
-  public init(
-    filename: String, source: String, encoding: String.Encoding, arguments: [String]?,
-    configuration: BareWorkletConfiguration?
-  ) {
-    self.service = BareNotificationService(
-      filename: filename, source: source, encoding: encoding.rawValue, arguments: arguments,
-      configuration: configuration)!
-    super.init()
-  }
-
-  public init(
-    resource: String, ofType: String, arguments: [String]?, workletConfig: Worklet.Configuration
-  ) {
-    let conf = BareWorkletConfiguration()
-    conf.memoryLimit = workletConfig.memoryLimit
-    conf.assets = workletConfig.assets
-    self.service = BareNotificationService(
-      resource: resource, ofType: ofType, arguments: nil, configuration: conf)!
-    super.init()
-  }
-
-  public init(
-    resource: String, ofType: String, inBundle bundle: Bundle, arguments: [String]?,
-    configuration: BareWorkletConfiguration?
-  ) {
-    self.service = BareNotificationService(
-      resource: resource, ofType: ofType, in: bundle, arguments: arguments,
-      configuration: configuration)!
-    super.init()
-  }
-
-  public init(
-    resource: String, ofType: String, inDirectory subpath: String, arguments: [String]?,
-    configuration: BareWorkletConfiguration?
-  ) {
-    self.service = BareNotificationService(
-      resource: resource, ofType: ofType, inDirectory: subpath, arguments: arguments,
-      configuration: configuration)!
-    super.init()
-  }
-
-  public init(
-    resource: String, ofType: String, inDirectory subpath: String, inBundle bundle: Bundle,
-    arguments: [String]?, configuration: BareWorkletConfiguration?
-  ) {
-    self.service = BareNotificationService(
-      resource: resource, ofType: ofType, inDirectory: subpath, in: bundle, arguments: arguments,
-      configuration: configuration)!
-    super.init()
-  }
-
-  public override func didReceive(
-    _ request: UNNotificationRequest,
-    withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
-  ) {
-    service.didReceive(request, withContentHandler: contentHandler)
-  }
-
-  public override func serviceExtensionTimeWillExpire() {
-    service.serviceExtensionTimeWillExpire()
-  }
-}
-
 public struct Worklet {
   public struct Configuration {
     var memoryLimit: UInt
@@ -98,25 +14,13 @@ public struct Worklet {
 
   let worklet: BareWorklet
 
-  public init?() {
-    if let worklet = BareWorklet(configuration: nil) {
-      self.worklet = worklet
-    } else {
-      return nil
-    }
-  }
-
-  public init?(configuration: Configuration) {
+  public init(configuration: Configuration = Configuration()) {
     let copy = BareWorkletConfiguration()
 
     copy.memoryLimit = configuration.memoryLimit
     copy.assets = configuration.assets
 
-    if let worklet = BareWorklet(configuration: copy) {
-      self.worklet = worklet
-    } else {
-      return nil
-    }
+    self.worklet = BareWorklet(configuration: copy)!
   }
 
   public func start(
@@ -136,42 +40,39 @@ public struct Worklet {
   }
 
   public func start(
-    name: String, ofType: String, arguments: [String] = []
+    name: String, ofType type: String, arguments: [String] = []
   ) {
     worklet.start(
-      name, ofType: ofType, arguments: arguments
+      name, ofType: type, arguments: arguments
     )
   }
 
   public func start(
-    name: String, ofType: String, inBundle: Bundle, arguments: [String] = []
+    name: String, ofType type: String, inBundle bundle: Bundle, arguments: [String] = []
   ) {
     worklet.start(
-      name, ofType: ofType, in: inBundle, arguments: arguments
+      name, ofType: type, in: bundle, arguments: arguments
     )
   }
 
   public func start(
-    name: String, ofType: String, inDirectory: String, arguments: [String] = []
+    name: String, ofType type: String, inDirectory subpath: String, arguments: [String] = []
   ) {
     worklet.start(
-      name, ofType: ofType, inDirectory: inDirectory, arguments: arguments
+      name, ofType: type, inDirectory: subpath, arguments: arguments
     )
   }
 
   public func start(
-    name: String, ofType: String, inDirectory: String, inBundle: Bundle, arguments: [String] = []
+    name: String, ofType type: String, inDirectory subpath: String, inBundle bundle: Bundle,
+    arguments: [String] = []
   ) {
     worklet.start(
-      name, ofType: ofType, inDirectory: inDirectory, in: inBundle, arguments: arguments
+      name, ofType: type, inDirectory: subpath, in: bundle, arguments: arguments
     )
   }
 
-  public func suspend() {
-    worklet.suspend()
-  }
-
-  public func suspend(linger: Int32) {
+  public func suspend(linger: Int32 = 0) {
     worklet.suspend(withLinger: linger)
   }
 
@@ -211,12 +112,8 @@ public struct Worklet {
 public struct IPC: AsyncSequence {
   let ipc: BareIPC
 
-  public init?(worklet: Worklet) {
-    if let ipc = BareIPC(worklet: worklet.worklet) {
-      self.ipc = ipc
-    } else {
-      return nil
-    }
+  public init(worklet: Worklet) {
+    self.ipc = BareIPC(worklet: worklet.worklet)!
   }
 
   public func read() async -> Data {
@@ -277,5 +174,137 @@ public struct IPC: AsyncSequence {
 
   public func makeAsyncIterator() -> AsyncIterator {
     return AsyncIterator(ipc: self)
+  }
+}
+
+open class NotificationService: UNNotificationServiceExtension {
+  private let service: BareNotificationService
+
+  public override init() {
+    self.service = BareNotificationService(configuration: nil)!
+
+    super.init()
+  }
+
+  public init(configuration: Worklet.Configuration = Worklet.Configuration()) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(configuration: copy)!
+
+    super.init()
+  }
+
+  public init(
+    filename: String, source: Data?, arguments: [String] = [],
+    configuration: Worklet.Configuration = Worklet.Configuration()
+  ) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(
+      filename: filename, source: source, arguments: arguments, configuration: copy
+    )!
+
+    super.init()
+  }
+
+  public init(
+    filename: String, source: String, encoding: String.Encoding, arguments: [String] = [],
+    configuration: Worklet.Configuration = Worklet.Configuration()
+  ) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(
+      filename: filename, source: source, encoding: encoding.rawValue, arguments: arguments,
+      configuration: copy
+    )!
+
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType type: String, arguments: [String] = [],
+    configuration: Worklet.Configuration = Worklet.Configuration()
+  ) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(
+      resource: resource, ofType: type, arguments: arguments, configuration: copy
+    )!
+
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType type: String, inBundle bundle: Bundle, arguments: [String] = [],
+    configuration: Worklet.Configuration = Worklet.Configuration()
+  ) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(
+      resource: resource, ofType: type, in: bundle, arguments: arguments,
+      configuration: copy
+    )!
+
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType type: String, inDirectory subpath: String, arguments: [String] = [],
+    configuration: Worklet.Configuration = Worklet.Configuration()
+  ) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(
+      resource: resource, ofType: type, inDirectory: subpath, arguments: arguments,
+      configuration: copy
+    )!
+
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType type: String, inDirectory subpath: String, inBundle bundle: Bundle,
+    arguments: [String] = [], configuration: Worklet.Configuration = Worklet.Configuration()
+  ) {
+    let copy = BareWorkletConfiguration()
+
+    copy.memoryLimit = configuration.memoryLimit
+    copy.assets = configuration.assets
+
+    self.service = BareNotificationService(
+      resource: resource, ofType: type, inDirectory: subpath, in: bundle, arguments: arguments,
+      configuration: copy
+    )!
+
+    super.init()
+  }
+
+  public override func didReceive(
+    _ request: UNNotificationRequest,
+    withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
+  ) {
+    service.didReceive(request, withContentHandler: contentHandler)
+  }
+
+  public override func serviceExtensionTimeWillExpire() {
+    service.serviceExtensionTimeWillExpire()
   }
 }
