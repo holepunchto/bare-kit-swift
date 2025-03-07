@@ -1,6 +1,90 @@
 import BareKitBridge
 import Foundation
 
+open class NotificationService: UNNotificationServiceExtension {
+  private let service: BareNotificationService
+
+  public override init() {
+    self.service = BareNotificationService(configuration: nil)!
+    super.init()
+  }
+
+  public init(configuration: BareWorkletConfiguration?) {
+    self.service = BareNotificationService(configuration: configuration)!
+    super.init()
+  }
+
+  public init(
+    filename: String, source: Data?, arguments: [String]?, configuration: BareWorkletConfiguration?
+  ) {
+    self.service = BareNotificationService(
+      filename: filename, source: source, arguments: arguments, configuration: configuration)!
+    super.init()
+  }
+
+  public init(
+    filename: String, source: String, encoding: String.Encoding, arguments: [String]?,
+    configuration: BareWorkletConfiguration?
+  ) {
+    self.service = BareNotificationService(
+      filename: filename, source: source, encoding: encoding.rawValue, arguments: arguments,
+      configuration: configuration)!
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType: String, arguments: [String]?, workletConfig: Worklet.Configuration
+  ) {
+    let conf = BareWorkletConfiguration()
+    conf.memoryLimit = workletConfig.memoryLimit
+    conf.assets = workletConfig.assets
+    self.service = BareNotificationService(
+      resource: resource, ofType: ofType, arguments: nil, configuration: conf)!
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType: String, inBundle bundle: Bundle, arguments: [String]?,
+    configuration: BareWorkletConfiguration?
+  ) {
+    self.service = BareNotificationService(
+      resource: resource, ofType: ofType, in: bundle, arguments: arguments,
+      configuration: configuration)!
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType: String, inDirectory subpath: String, arguments: [String]?,
+    configuration: BareWorkletConfiguration?
+  ) {
+    self.service = BareNotificationService(
+      resource: resource, ofType: ofType, inDirectory: subpath, arguments: arguments,
+      configuration: configuration)!
+    super.init()
+  }
+
+  public init(
+    resource: String, ofType: String, inDirectory subpath: String, inBundle bundle: Bundle,
+    arguments: [String]?, configuration: BareWorkletConfiguration?
+  ) {
+    self.service = BareNotificationService(
+      resource: resource, ofType: ofType, inDirectory: subpath, in: bundle, arguments: arguments,
+      configuration: configuration)!
+    super.init()
+  }
+
+  public override func didReceive(
+    _ request: UNNotificationRequest,
+    withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
+  ) {
+    service.didReceive(request, withContentHandler: contentHandler)
+  }
+
+  public override func serviceExtensionTimeWillExpire() {
+    service.serviceExtensionTimeWillExpire()
+  }
+}
+
 public struct Worklet {
   public struct Configuration {
     var memoryLimit: UInt
