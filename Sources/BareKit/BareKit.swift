@@ -177,8 +177,18 @@ public struct IPC: AsyncSequence {
   }
 }
 
+public typealias NotificationServiceDelegate = BareKitBridge.BareNotificationServiceDelegate
+
 open class NotificationService: UNNotificationServiceExtension {
   private let service: BareNotificationService
+
+  public var delegate: BareNotificationServiceDelegate? {
+    didSet {
+      if let delegate = delegate {
+        self.service.delegate = delegate
+      }
+    }
+  }
 
   public override init() {
     self.service = BareNotificationService(configuration: nil)!
