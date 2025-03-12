@@ -1,5 +1,6 @@
 import BareKitBridge
 import Foundation
+import UserNotifications
 
 public struct Worklet {
   public struct Configuration {
@@ -177,8 +178,16 @@ public struct IPC: AsyncSequence {
   }
 }
 
+public typealias NotificationServiceDelegate = BareNotificationServiceDelegate
+
 open class NotificationService: UNNotificationServiceExtension {
   private let service: BareNotificationService
+
+  public var delegate: BareNotificationServiceDelegate? {
+    didSet {
+      self.service.delegate = delegate ?? self.service
+    }
+  }
 
   public override init() {
     self.service = BareNotificationService(configuration: nil)!
