@@ -297,14 +297,14 @@ open class NotificationService: UNNotificationServiceExtension {
     super.init()
   }
 
-  public override func didReceive(
+  open override func didReceive(
     _ request: UNNotificationRequest,
     withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
   ) {
     service.didReceive(request, withContentHandler: contentHandler)
   }
 
-  public override func serviceExtensionTimeWillExpire() {
+  open override func serviceExtensionTimeWillExpire() {
     service.serviceExtensionTimeWillExpire()
   }
 }
