@@ -1,5 +1,6 @@
 import BareKitBridge
 import Foundation
+import UserNotifications
 
 public struct Worklet {
   public struct Configuration {
