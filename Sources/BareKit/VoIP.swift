@@ -5,7 +5,7 @@ public class VoIP: NSObject, CXProviderDelegate, PKPushRegistryDelegate {
   private let provider: CXProvider
   private let registry: PKPushRegistry
 
-  override init() {
+  public override init() {
     let configuration = CXProviderConfiguration()
     configuration.supportsVideo = false
 
