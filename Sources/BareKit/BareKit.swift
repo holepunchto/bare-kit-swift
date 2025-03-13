@@ -316,4 +316,8 @@ open class NotificationService: UNNotificationServiceExtension {
   open override func serviceExtensionTimeWillExpire() {
     service.serviceExtensionTimeWillExpire()
   }
+
+  open func workletDidReply(_ reply: [AnyHashable: Any]) -> UNNotificationContent {
+    return service.workletDidReply(reply)
+  }
 }
