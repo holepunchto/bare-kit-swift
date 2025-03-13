@@ -108,4 +108,3 @@ public struct Worklet {
     return try await worklet.push(data, encoding: encoding.rawValue)
   }
 }
-

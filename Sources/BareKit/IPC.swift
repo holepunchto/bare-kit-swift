@@ -68,4 +68,3 @@ public struct IPC: AsyncSequence {
     return AsyncIterator(ipc: self)
   }
 }
-
