@@ -50,9 +50,9 @@ public class VoIP: NSObject, CXProviderDelegate, PKPushRegistryDelegate {
       if let error = error {
         print("\(error.localizedDescription)")
       }
-    }
 
-    completion()
+      completion()
+    }
   }
 
   @available(iOS 14.5, *)
