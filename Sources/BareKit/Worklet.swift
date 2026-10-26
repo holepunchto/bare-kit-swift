@@ -38,7 +38,8 @@ public final class Worklet: @unchecked Sendable {
       var options = bare_worklet_options_t(
         version: 0,
         memory_limit: options.memoryLimit,
-        assets: assets
+        assets: assets,
+        android: .init(jvm: nil, context: nil)
       )
 
       return bare_worklet_create(&options, &handle)
