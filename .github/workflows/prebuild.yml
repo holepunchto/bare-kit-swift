@@ -1,0 +1,66 @@
+name: Prebuild
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag of the release to prebuild
+        required: true
+permissions:
+  contents: read
+jobs:
+  prebuild:
+    strategy:
+      matrix:
+        include:
+          - os: macos-15
+            platform: darwin
+            arch: x64
+          - os: macos-15
+            platform: darwin
+            arch: arm64
+          - os: macos-15
+            platform: ios
+            arch: arm64
+          - os: macos-15
+            platform: ios
+            arch: arm64
+            tags: -simulator
+            flags: --simulator
+          - os: macos-15
+            platform: ios
+            arch: x64
+            tags: -simulator
+            flags: --simulator
+    runs-on: ${{ matrix.os }}
+    name: Build / ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.tags }}
+    steps:
+      - uses: holepunchto/actions/bare-base@v1
+      - uses: holepunchto/actions/compile-prebuilds@v1
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          flags: ${{ matrix.flags }}
+          tags: ${{ matrix.tags }}
+          upload: true
+          archive: true
+  release:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    needs: prebuild
+    name: Release
+    steps:
+      - uses: holepunchto/actions/checkout@v1
+      - uses: holepunchto/actions/download-prebuilds@v1
+        with:
+          archive: true
+      - id: xcframework
+        uses: holepunchto/actions/create-xcframework@v1
+        with:
+          name: BareKit
+          archive: true
+      - uses: holepunchto/actions/create-github-release@v1
+        with:
+          draft: true
+          tag: ${{ inputs.tag }}
+          files: ${{ steps.xcframework.outputs.path }}

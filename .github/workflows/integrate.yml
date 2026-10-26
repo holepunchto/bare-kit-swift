@@ -1,0 +1,48 @@
+name: Integrate
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    name: Security
+    steps:
+      - uses: holepunchto/actions/security-base@v1
+  lint:
+    runs-on: macos-15
+    name: Lint
+    steps:
+      - uses: holepunchto/actions/swift-base@v1
+      - run: swift format lint --recursive --strict .
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: macos-15-intel
+            platform: darwin
+            arch: x64
+          - os: macos-15
+            platform: darwin
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
+    steps:
+      - uses: holepunchto/actions/swift-base@v1
+      - uses: holepunchto/actions/setup-node@v1
+      - uses: holepunchto/actions/install-npm-dependencies@v1
+      - uses: holepunchto/actions/compile-prebuilds@v1
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+      - uses: holepunchto/actions/create-xcframework@v1
+        with:
+          name: BareKit
+      - run: swift test
+        env:
+          BARE_KIT_LOCAL: 1

@@ -1,0 +1,18 @@
+name: Publish
+on:
+  push:
+    tags:
+      - v*
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    name: Publish
+    steps:
+      - uses: holepunchto/actions/swift-base@v1
+      - uses: holepunchto/actions/publish-swift@v1
+        with:
+          asset: BareKit.xcframework.zip
