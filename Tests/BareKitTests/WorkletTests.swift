@@ -38,6 +38,31 @@ final class WorkletTests: XCTestCase {
     XCTAssertEqual(code, 0)
   }
 
+  func testEndsIPCData() async throws {
+    let worklet = try Worklet()
+    let ipc = try IPC(worklet: worklet)
+
+    try worklet.start(fixture("collect.js"))
+
+    try await ipc.write(Data("Hello ".utf8))
+    try await ipc.write(Data("world".utf8))
+
+    ipc.end()
+
+    do {
+      try await ipc.write(Data("!".utf8))
+      XCTFail("Expected the write to fail")
+    } catch {
+      XCTAssertEqual(error as? BareKitError, .closed)
+    }
+
+    let received = await readAll(ipc)
+    XCTAssertEqual(received, "Hello world")
+
+    let code = await worklet.wait()
+    XCTAssertEqual(code, 0)
+  }
+
   func testPassesArguments() async throws {
     let worklet = try Worklet()
     let ipc = try IPC(worklet: worklet)
