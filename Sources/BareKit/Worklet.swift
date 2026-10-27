@@ -12,14 +12,8 @@ public final class Worklet: @unchecked Sendable {
     /// limit from the amount of physical memory of the device.
     public var memoryLimit: Int
 
-    /// The directory in which the assets of a bundle are stored, which the
-    /// worklet requires read and write access to. Without it, referencing an
-    /// asset is a runtime error.
-    public var assets: URL?
-
-    public init(memoryLimit: Int = 0, assets: URL? = nil) {
+    public init(memoryLimit: Int = 0) {
       self.memoryLimit = memoryLimit
-      self.assets = assets
     }
   }
 
@@ -34,16 +28,13 @@ public final class Worklet: @unchecked Sendable {
   public init(options: Options = Options()) throws {
     var handle: OpaquePointer?
 
-    let status = (options.assets?.path).withOptionalCString { assets in
-      var options = bare_worklet_options_t(
-        version: 0,
-        memory_limit: options.memoryLimit,
-        assets: assets,
-        android: .init(jvm: nil, context: nil)
-      )
+    var options = bare_worklet_options_t(
+      version: 0,
+      memory_limit: options.memoryLimit,
+      android: .init(jvm: nil, context: nil)
+    )
 
-      return bare_worklet_create(&options, &handle)
-    }
+    let status = bare_worklet_create(&options, &handle)
 
     guard status == 0, let handle else { throw BareKitError.failed(status) }
 
@@ -88,6 +79,8 @@ public final class Worklet: @unchecked Sendable {
   }
 
   /// Starts the worklet, running `filename` with `arguments` as `Bare.argv`.
+  /// A relative `filename` names a resource of the application bundle, which
+  /// extensions share with their application.
   ///
   /// - Parameters:
   ///   - filename: The path or URL of the module to run.
@@ -179,16 +172,6 @@ final class Box<Value> {
 
   init(_ value: Value) {
     self.value = value
-  }
-}
-
-extension Optional where Wrapped == String {
-  fileprivate func withOptionalCString<Result>(
-    _ body: (UnsafePointer<CChar>?) -> Result
-  ) -> Result {
-    guard let self else { return body(nil) }
-
-    return self.withCString(body)
   }
 }
 

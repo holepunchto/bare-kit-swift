@@ -27,7 +27,7 @@ import Foundation
 let worklet = try Worklet()
 let ipc = try IPC(worklet: worklet)
 
-try worklet.start(Bundle.main.url(forResource: "app", withExtension: "bundle")!)
+try worklet.start("app.bundle")
 
 try await ipc.write(Data("Hello world".utf8))
 
@@ -40,7 +40,7 @@ ipc.close()
 await worklet.wait()
 ```
 
-Where `app.bundle` is a Bare bundle using `Bare.IPC`:
+Where `app.bundle` is a resource of the application, here a Bare bundle using `Bare.IPC`:
 
 ```js
 Bare.IPC.on("data", (data) => Bare.IPC.end(data));
