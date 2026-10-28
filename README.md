@@ -2,8 +2,6 @@
 
 Swift bindings for [Bare Kit](https://github.com/holepunchto/bare-kit), which runs Bare in a thread of its own within the application, known as a worklet, with an IPC to it exposed as `Bare.IPC` inside the worklet.
 
-## Installation
-
 ```swift
 dependencies: [
   .package(url: "https://github.com/holepunchto/bare-kit-swift", from: "2.0.0")
