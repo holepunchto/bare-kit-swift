@@ -6,7 +6,7 @@ Swift bindings for [Bare Kit](https://github.com/holepunchto/bare-kit), which ru
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/holepunchto/bare-kit-swift", from: "2.0.0")
+  .package(url: "https://github.com/holepunchto/bare-kit-swift", from: "<tag>")
 ]
 ```
 
