@@ -1,8 +1,6 @@
 {
-  "name": "bare-kit-swift",
   "private": true,
-  "description": "Native build of Bare Kit embedded by bare-kit-swift",
-  "license": "Apache-2.0",
+  "name": "bare-kit-swift",
   "devDependencies": {
     "cmake-bare": "^1.10.2",
     "cmake-fetch": "^1.5.3"
