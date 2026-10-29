@@ -44,7 +44,7 @@ jobs:
           upload: true
           archive: true
   release:
-    runs-on: macos-15
+    runs-on: macos-latest
     permissions:
       contents: write
     needs: prebuild
