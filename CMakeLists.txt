@@ -5,7 +5,7 @@ find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 
 project(bare_kit_swift C)
 
-fetch_package("github:holepunchto/bare-kit#v3" SOURCE_DIR bare_kit)
+fetch_package("github:holepunchto/bare-kit@3.0.0" SOURCE_DIR bare_kit)
 
 add_library(bare_kit_framework SHARED)
 
