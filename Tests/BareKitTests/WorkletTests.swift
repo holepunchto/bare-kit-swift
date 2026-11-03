@@ -125,4 +125,20 @@ final class WorkletTests: XCTestCase {
       XCTAssertEqual(error as? BareKitError, .closed)
     }
   }
+
+  func testFailsToWriteOnceTheWorkletExits() async throws {
+    let worklet = try Worklet()
+    let ipc = try IPC(worklet: worklet)
+
+    try worklet.start(fixture("exit.js"))
+
+    await worklet.wait()
+
+    do {
+      try await ipc.write(Data("Hello world".utf8))
+      XCTFail("Expected the write to fail")
+    } catch {
+      XCTAssertEqual(error as? BareKitError, .peerClosed)
+    }
+  }
 }

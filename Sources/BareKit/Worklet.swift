@@ -165,6 +165,8 @@ public enum BareKitError: Error, Equatable {
   case failed(Int32)
   /// The IPC was closed before the data could be written.
   case closed
+  /// The worklet closed its end of the IPC before the data could be written.
+  case peerClosed
 }
 
 final class Box<Value> {

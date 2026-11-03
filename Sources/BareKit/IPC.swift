@@ -57,7 +57,8 @@ public final class IPC: AsyncSequence, @unchecked Sendable {
   /// Writes `data` to `Bare.IPC` of the worklet, waiting for room as needed.
   ///
   /// - Throws: ``BareKitError/closed`` if the IPC is ended or closed before all
-  ///   of the data is written.
+  ///   of the data is written, or ``BareKitError/peerClosed`` if the worklet
+  ///   closes its end before then.
   public func write(_ data: Data) async throws {
     try await withCheckedThrowingContinuation { continuation in
       channel.write(data, continuation)
@@ -74,7 +75,7 @@ public final class IPC: AsyncSequence, @unchecked Sendable {
   /// Closes the IPC, after which iteration ends and writes fail. Closing twice
   /// is a no-op.
   public func close() {
-    bare_ipc_close(handle)
+    channel.close()
   }
 }
 
@@ -91,6 +92,7 @@ private final class Channel: @unchecked Sendable {
   private var buffer = [UInt8](repeating: 0, count: Int(BARE_IPC_READ_BUFFER_SIZE))
   private var reading = true
   private var ending = false
+  private var closed = false
   private var writes: [(data: Data, continuation: CheckedContinuation<Void, Error>)] = []
 
   init(_ handle: OpaquePointer, _ poll: OpaquePointer) {
@@ -119,6 +121,12 @@ private final class Channel: @unchecked Sendable {
 
       if writes.isEmpty { bare_ipc_end(handle) }
     }
+  }
+
+  func close() {
+    lock.withLock { closed = true }
+
+    bare_ipc_close(handle)
   }
 
   func finish() {
@@ -176,7 +184,9 @@ private final class Channel: @unchecked Sendable {
         ? 0 : Int(data.withUnsafeBytes { bare_ipc_write(handle, $0.baseAddress, $0.count) })
 
       if written == bare_ipc_error {
-        for write in writes { write.continuation.resume(throwing: BareKitError.closed) }
+        let error: BareKitError = closed ? .closed : .peerClosed
+
+        for write in writes { write.continuation.resume(throwing: error) }
 
         writes.removeAll()
       } else if written == bare_ipc_would_block {
