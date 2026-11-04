@@ -3,6 +3,8 @@
   "name": "bare-kit-swift",
   "devDependencies": {
     "cmake-bare": "^1.10.2",
-    "cmake-fetch": "^1.5.3"
+    "cmake-fetch": "^1.5.3",
+    "prettier": "^3.9.10",
+    "prettier-config-holepunch": "^2.0.0"
   }
 }
