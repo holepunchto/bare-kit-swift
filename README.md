@@ -35,10 +35,23 @@ await worklet.wait()
 Where `app.bundle` is a resource of the application, here a Bare bundle using `Bare.IPC`:
 
 ```js
-Bare.IPC.on("data", (data) => Bare.IPC.end(data));
+Bare.IPC.on('data', (data) => Bare.IPC.end(data))
 ```
 
-Releasing a worklet terminates it, so keep a reference to it for as long as it should run. Native addons linked with <https://github.com/holepunchto/bare-link> are loaded by the system linker, so embed them in the application as you would any other framework.
+Iterating the IPC yields the data that the worklet writes to `Bare.IPC` until it ends its side. As `Bare.IPC` keeps the worklet alive, `end()` ends the data sent to it so that it may exit on its own, and `wait()` returns its exit code. Writes fail with `BareKitError.closed` once the IPC is ended or closed, and with `BareKitError.peerClosed` once the worklet has closed its side. Releasing a worklet terminates it, so keep a reference to it for as long as it should run.
+
+These bindings are a thin layer over [Bare Kit](https://github.com/holepunchto/bare-kit), whose README covers the [lifecycle](https://github.com/holepunchto/bare-kit#lifecycle), [IPC](https://github.com/holepunchto/bare-kit#ipc), [suspension](https://github.com/holepunchto/bare-kit#suspension), [addons](https://github.com/holepunchto/bare-kit#addons), and [error handling](https://github.com/holepunchto/bare-kit#error-handling) of a worklet. In Swift terms:
+
+- If `source` is `nil`, `start()` reads the module at runtime, so the worklet may be a module next to its `node_modules` rather than a bundle.
+- Bare Kit is a dynamic framework, so native addons resolve the symbols of Bare from it as is.
+- Bare Kit calls back on threads of its own, which the bindings turn into async results, so a worklet and its IPC may be used from any task.
+- An uncaught error in the worklet aborts the process, the application included, so report errors over `Bare.IPC` as described in [error handling](https://github.com/holepunchto/bare-kit#error-handling).
+
+## Platforms
+
+The package supports iOS and macOS, and includes Bare Kit as a framework from its release. A relative filename names a resource of the application bundle, which extensions share with their application.
+
+Native addons linked with <https://github.com/holepunchto/bare-link> are loaded by the system linker, so embed them in the application as you would any other framework.
 
 ## License
 

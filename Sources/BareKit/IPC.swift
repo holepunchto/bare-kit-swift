@@ -4,7 +4,11 @@ import Foundation
 /// The host end of the IPC of a worklet, exposed as `Bare.IPC` in the worklet.
 ///
 /// Iterating an IPC yields the data the worklet writes to `Bare.IPC` until the
-/// worklet ends its end or the IPC is closed.
+/// worklet ends its end or the IPC is closed. Data is only read from the
+/// worklet while iterating, so a worklet that writes faster than the host
+/// iterates waits for room. Only one iterator may wait for data at a time;
+/// iteration ends early for an iterator that waits while another one already
+/// does, or whose task is cancelled while it waits.
 public final class IPC: AsyncSequence, @unchecked Sendable {
   public typealias Element = Data
 
@@ -44,14 +48,27 @@ public final class IPC: AsyncSequence, @unchecked Sendable {
   }
 
   deinit {
+    channel.finish()
+
     bare_ipc_poll_destroy(poll)
     bare_ipc_destroy(handle)
-
-    channel.finish()
   }
 
-  public func makeAsyncIterator() -> AsyncStream<Data>.AsyncIterator {
-    channel.data.makeAsyncIterator()
+  /// Iterates the data the worklet writes to `Bare.IPC`.
+  public struct AsyncIterator: AsyncIteratorProtocol {
+    private let channel: Channel
+
+    fileprivate init(_ channel: Channel) {
+      self.channel = channel
+    }
+
+    public func next() async -> Data? {
+      await channel.read()
+    }
+  }
+
+  public func makeAsyncIterator() -> AsyncIterator {
+    AsyncIterator(channel)
   }
 
   /// Writes `data` to `Bare.IPC` of the worklet, waiting for room as needed.
@@ -79,27 +96,57 @@ public final class IPC: AsyncSequence, @unchecked Sendable {
   }
 }
 
-// Polls call back on a thread owned by the ipc, while writes may come from any
-// thread, so the pending writes are guarded by the lock.
+// Polls call back on a thread owned by the ipc, while reads and writes may come
+// from any thread, so the pending read and writes are guarded by the lock.
 private final class Channel: @unchecked Sendable {
-  let data: AsyncStream<Data>
-
   private let handle: OpaquePointer
   private let poll: OpaquePointer
-  private let continuation: AsyncStream<Data>.Continuation
   private let lock = NSLock()
 
   private var buffer = [UInt8](repeating: 0, count: Int(BARE_IPC_READ_BUFFER_SIZE))
   private var reading = true
   private var ending = false
   private var closed = false
+  private var reads = 0
+  private var pending: (id: Int, continuation: CheckedContinuation<Data?, Never>)?
   private var writes: [(data: Data, continuation: CheckedContinuation<Void, Error>)] = []
 
   init(_ handle: OpaquePointer, _ poll: OpaquePointer) {
     self.handle = handle
     self.poll = poll
+  }
 
-    (data, continuation) = AsyncStream.makeStream()
+  func read() async -> Data? {
+    let id = lock.withLock {
+      reads += 1
+
+      return reads
+    }
+
+    return await withTaskCancellationHandler {
+      await withCheckedContinuation { continuation in
+        lock.withLock {
+          if !reading || pending != nil || Task.isCancelled {
+            return continuation.resume(returning: nil)
+          }
+
+          pending = (id, continuation)
+
+          drain()
+          update()
+        }
+      }
+    } onCancel: {
+      lock.withLock {
+        guard let read = pending, read.id == id else { return }
+
+        pending = nil
+
+        read.continuation.resume(returning: nil)
+
+        update()
+      }
+    }
   }
 
   func write(_ data: Data, _ continuation: CheckedContinuation<Void, Error>) {
@@ -124,19 +171,24 @@ private final class Channel: @unchecked Sendable {
   }
 
   func close() {
-    lock.withLock { closed = true }
+    lock.withLock {
+      closed = true
+
+      stop()
+      update()
+    }
 
     bare_ipc_close(handle)
   }
 
   func finish() {
-    continuation.finish()
+    lock.withLock { stop() }
   }
 
   func update() {
     var events: Int32 = 0
 
-    if reading { events |= Int32(bare_ipc_readable) }
+    if pending != nil { events |= Int32(bare_ipc_readable) }
     if !writes.isEmpty { events |= Int32(bare_ipc_writable) }
 
     if events == 0 {
@@ -159,20 +211,24 @@ private final class Channel: @unchecked Sendable {
   }
 
   private func drain() {
-    while true {
-      let read = buffer.withUnsafeMutableBytes { bare_ipc_read(handle, $0.baseAddress, $0.count) }
+    guard let continuation = pending?.continuation else { return }
 
-      if read > 0 {
-        continuation.yield(Data(buffer[0..<Int(read)]))
-      } else {
-        if read == 0 {
-          reading = false
-          continuation.finish()
-        }
+    let read = buffer.withUnsafeMutableBytes { bare_ipc_read(handle, $0.baseAddress, $0.count) }
 
-        return
-      }
+    if read > 0 {
+      pending = nil
+
+      continuation.resume(returning: Data(buffer[0..<Int(read)]))
+    } else if read == 0 {
+      stop()
     }
+  }
+
+  private func stop() {
+    reading = false
+
+    pending?.continuation.resume(returning: nil)
+    pending = nil
   }
 
   private func flush() {

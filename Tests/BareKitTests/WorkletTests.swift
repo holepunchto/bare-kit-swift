@@ -63,6 +63,33 @@ final class WorkletTests: XCTestCase {
     XCTAssertEqual(code, 0)
   }
 
+  func testWaitsForTheHostToRead() async throws {
+    let worklet = try Worklet()
+    let ipc = try IPC(worklet: worklet)
+
+    try worklet.start(fixture("flood.js"))
+
+    let exitedBeforeReading = await withTaskGroup(of: Bool.self) { group in
+      group.addTask {
+        await worklet.wait()
+        return true
+      }
+
+      group.addTask {
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        return false
+      }
+
+      let exited = await group.next()!
+
+      _ = await readAll(ipc)
+
+      return exited
+    }
+
+    XCTAssertFalse(exitedBeforeReading)
+  }
+
   func testPassesArguments() async throws {
     let worklet = try Worklet()
     let ipc = try IPC(worklet: worklet)
