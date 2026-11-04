@@ -6,8 +6,8 @@ let framework: Target =
   ? .binaryTarget(
     name: "BareKitFramework",
     url:
-      "https://github.com/holepunchto/bare-kit-swift/releases/download/v2.1.0/BareKit.xcframework.zip",
-    checksum: "08b008abcd30be9821a739f90b363265510b5782fd2c44e198744373ca71a8a8"
+      "https://github.com/holepunchto/bare-kit-swift/releases/download/v2.2.0/BareKit.xcframework.zip",
+    checksum: "b902db426fd9ed1bc1c73cc5048a9a9f22799dc0972f2e0c70fab3d6561fb3e2"
   )
   : .binaryTarget(name: "BareKitFramework", path: "BareKit.xcframework")
 
