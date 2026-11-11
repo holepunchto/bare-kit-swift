@@ -53,6 +53,14 @@ The package supports iOS and macOS, and includes Bare Kit as a framework from it
 
 Native addons linked with <https://github.com/holepunchto/bare-link> are loaded by the system linker, so embed them in the application as you would any other framework.
 
+Bare Kit runs worklets with V8 by default. To run them with the JavaScriptCore of the system instead, which leaves V8 out of the application, enable the `JavaScriptCore` trait in place of the default `V8` trait:
+
+```swift
+.package(url: "https://github.com/holepunchto/bare-kit-swift", from: "<tag>", traits: ["JavaScriptCore"])
+```
+
+Traits apply to the package across the application, so packages that depend on it must agree on the engine. With both traits enabled, the build fails as the two frameworks clash.
+
 ## License
 
 Apache-2.0

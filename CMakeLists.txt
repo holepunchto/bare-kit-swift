@@ -5,6 +5,14 @@ find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 
 project(bare_kit_swift C)
 
+set(BARE_KIT_SWIFT_ENGINE "v8" CACHE STRING "The JavaScript engine to build Bare Kit with, either v8 or javascriptcore")
+
+if(BARE_KIT_SWIFT_ENGINE STREQUAL "javascriptcore")
+  set(BARE_ENGINE "github:holepunchto/libjsc#29e90ae")
+elseif(NOT BARE_KIT_SWIFT_ENGINE STREQUAL "v8")
+  message(FATAL_ERROR "Unknown engine '${BARE_KIT_SWIFT_ENGINE}'")
+endif()
+
 fetch_package("github:holepunchto/bare-kit@3.0.1" SOURCE_DIR bare_kit)
 
 add_library(bare_kit_framework SHARED)

@@ -23,6 +23,9 @@ jobs:
   test:
     strategy:
       matrix:
+        platform: [darwin]
+        arch: [x64, arm64]
+        engine: [v8, javascriptcore]
         include:
           - os: macos-15-intel
             platform: darwin
@@ -31,7 +34,7 @@ jobs:
             platform: darwin
             arch: arm64
     runs-on: ${{ matrix.os }}
-    name: Test / ${{ matrix.platform }}-${{ matrix.arch }}
+    name: Test / ${{ matrix.platform }}-${{ matrix.arch }} / ${{ matrix.engine }}
     steps:
       - uses: holepunchto/actions/swift-base@v1
       - uses: holepunchto/actions/setup-node@v1
@@ -40,6 +43,7 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           arch: ${{ matrix.arch }}
+          flags: -D BARE_KIT_SWIFT_ENGINE=${{ matrix.engine }}
       - uses: holepunchto/actions/create-xcframework@v1
         with:
           name: BareKit

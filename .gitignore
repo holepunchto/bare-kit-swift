@@ -6,3 +6,5 @@ prebuilds/
 package-lock.json
 BareKit.xcframework
 BareKit.xcframework.zip
+BareKit.*.xcframework
+BareKit.*.xcframework.zip
