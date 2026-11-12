@@ -39,9 +39,21 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           arch: ${{ matrix.arch }}
-          flags: ${{ matrix.flags }}
+          flags: ${{ matrix.flags }} -D BARE_KIT_SWIFT_ENGINE=v8
+          build: build/v8
+          prefix: prebuilds/v8
+      - uses: holepunchto/actions/compile-prebuilds@v1
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
+          flags: ${{ matrix.flags }} -D BARE_KIT_SWIFT_ENGINE=javascriptcore
+          build: build/javascriptcore
+          prefix: prebuilds/javascriptcore
+      - uses: holepunchto/actions/upload-prebuilds@v1
+        with:
+          platform: ${{ matrix.platform }}
+          arch: ${{ matrix.arch }}
           tags: ${{ matrix.tags }}
-          upload: true
           archive: true
   release:
     runs-on: macos-latest
@@ -59,14 +71,25 @@ jobs:
       - uses: holepunchto/actions/download-prebuilds@v1
         with:
           archive: true
-      - id: xcframework
+      - id: v8
         uses: holepunchto/actions/create-xcframework@v1
         with:
           name: BareKit
+          prefix: prebuilds/v8
+          archive: true
+          attest: true
+      - id: javascriptcore
+        uses: holepunchto/actions/create-xcframework@v1
+        with:
+          name: BareKit
+          prefix: prebuilds/javascriptcore
+          path: BareKit.JavaScriptCore.xcframework
           archive: true
           attest: true
       - uses: holepunchto/actions/create-github-release@v1
         with:
           draft: true
           tag: ${{ inputs.tag }}
-          files: ${{ steps.xcframework.outputs.path }}
+          files: >
+            ${{ steps.v8.outputs.path }}
+            ${{ steps.javascriptcore.outputs.path }}

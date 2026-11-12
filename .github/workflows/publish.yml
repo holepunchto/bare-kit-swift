@@ -13,4 +13,6 @@ jobs:
       - uses: holepunchto/actions/swift-base@v1
       - uses: holepunchto/actions/publish-swift@v1
         with:
-          assets: BareKit.xcframework.zip
+          assets: >
+            BareKit.xcframework.zip
+            BareKit.JavaScriptCore.xcframework.zip
