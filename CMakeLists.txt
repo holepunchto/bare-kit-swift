@@ -61,3 +61,15 @@ bare_target(target)
 install(TARGETS bare_kit_framework FRAMEWORK DESTINATION ${target})
 
 install(FILES "${bare_kit}/include/bare-kit.h" DESTINATION ${target}/BareKit.framework/Headers)
+
+if(IOS)
+  set(resources ${target}/BareKit.framework)
+else()
+  set(resources ${target}/BareKit.framework/Versions/A/Resources)
+endif()
+
+install(
+  FILES "${CMAKE_CURRENT_LIST_DIR}/lib/${BARE_KIT_SWIFT_ENGINE}.xcprivacy"
+  DESTINATION ${resources}
+  RENAME PrivacyInfo.xcprivacy
+)
