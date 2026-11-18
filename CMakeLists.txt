@@ -8,57 +8,41 @@ project(bare_kit_swift C)
 set(BARE_KIT_SWIFT_ENGINE "v8" CACHE STRING "The JavaScript engine to build Bare Kit with, either v8 or javascriptcore")
 
 if(BARE_KIT_SWIFT_ENGINE STREQUAL "javascriptcore")
-  set(BARE_ENGINE "github:holepunchto/libjsc#fe991e6")
+  set(BARE_ENGINE "github:holepunchto/libjsc#255ffb1")
 elseif(NOT BARE_KIT_SWIFT_ENGINE STREQUAL "v8")
   message(FATAL_ERROR "Unknown engine '${BARE_KIT_SWIFT_ENGINE}'")
 endif()
 
-fetch_package("github:holepunchto/bare-kit@3.1.0" SOURCE_DIR bare_kit)
+fetch_package("github:holepunchto/bare-kit@3.2.1" SOURCE_DIR bare_kit)
 
-add_library(bare_kit_framework SHARED)
+get_target_property(framework bare_kit::shared ALIASED_TARGET)
+
+if(IOS)
+  set(plist "${CMAKE_CURRENT_LIST_DIR}/lib/iOS.plist")
+else()
+  set(plist "${CMAKE_CURRENT_LIST_DIR}/lib/macOS.plist")
+endif()
 
 set_target_properties(
-  bare_kit_framework
+  ${framework}
   PROPERTIES
   FRAMEWORK TRUE
   OUTPUT_NAME BareKit
 
+  MACOSX_FRAMEWORK_INFO_PLIST "${plist}"
   MACOSX_FRAMEWORK_BUNDLE_NAME "BareKit"
   MACOSX_FRAMEWORK_IDENTIFIER "to.holepunch.bare.kit"
   MACOSX_FRAMEWORK_BUNDLE_VERSION ${PROJECT_VERSION}
   MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${PROJECT_VERSION}
 )
 
-if(IOS)
-  set_target_properties(
-    bare_kit_framework
-    PROPERTIES
-    MACOSX_FRAMEWORK_INFO_PLIST "${CMAKE_CURRENT_LIST_DIR}/lib/iOS.plist"
-  )
-else()
-  set_target_properties(
-    bare_kit_framework
-    PROPERTIES
-    MACOSX_FRAMEWORK_INFO_PLIST "${CMAKE_CURRENT_LIST_DIR}/lib/macOS.plist"
-  )
-endif()
+add_custom_target(bare_kit_swift ALL)
 
-target_link_libraries(
-  bare_kit_framework
-  PRIVATE
-    bare::kit
-    bare::kit::exports
-)
-
-target_link_options(
-  bare_kit_framework
-  PRIVATE
-    $<$<CONFIG:Release>:-Wl,-dead_strip,-S,-x>
-)
+add_dependencies(bare_kit_swift bare_kit::shared)
 
 bare_target(target)
 
-install(TARGETS bare_kit_framework FRAMEWORK DESTINATION ${target})
+install(TARGETS ${framework} FRAMEWORK DESTINATION ${target})
 
 install(FILES "${bare_kit}/include/bare-kit.h" DESTINATION ${target}/BareKit.framework/Headers)
 
