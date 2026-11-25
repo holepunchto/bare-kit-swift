@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 4.0)
 find_package(cmake-bare REQUIRED PATHS node_modules/cmake-bare)
 find_package(cmake-fetch REQUIRED PATHS node_modules/cmake-fetch)
 
-project(bare_kit_swift C)
+project(bare_kit_swift LANGUAGES C VERSION 2.4.2)
 
 set(BARE_KIT_SWIFT_ENGINE "v8" CACHE STRING "The JavaScript engine to build Bare Kit with, either v8 or javascriptcore")
 
@@ -32,8 +32,8 @@ set_target_properties(
   MACOSX_FRAMEWORK_INFO_PLIST "${plist}"
   MACOSX_FRAMEWORK_BUNDLE_NAME "BareKit"
   MACOSX_FRAMEWORK_IDENTIFIER "to.holepunch.bare.kit"
-  MACOSX_FRAMEWORK_BUNDLE_VERSION ${PROJECT_VERSION}
-  MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${PROJECT_VERSION}
+  MACOSX_FRAMEWORK_BUNDLE_VERSION "${PROJECT_VERSION}"
+  MACOSX_FRAMEWORK_SHORT_VERSION_STRING "${PROJECT_VERSION}"
 )
 
 add_custom_target(bare_kit_swift ALL)
