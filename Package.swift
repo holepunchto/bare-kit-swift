@@ -8,7 +8,7 @@ func framework(_ name: String, asset: String, checksum: String) -> Target {
   Context.environment["BARE_KIT_LOCAL"] == nil
     ? .binaryTarget(
       name: name,
-      url: "https://github.com/holepunchto/bare-kit-swift/releases/download/v2.4.3/\(asset)",
+      url: "https://github.com/holepunchto/bare-kit-swift/releases/download/v2.5.0/\(asset)",
       checksum: checksum
     )
     : .binaryTarget(name: name, path: "BareKit.xcframework")
@@ -32,12 +32,12 @@ let package = Package(
     framework(
       "BareKitFramework",
       asset: "BareKit.xcframework.zip",
-      checksum: "b91b1c0b2fdb12d97d70968d94ed64cc92707bb38b9e6da9a13803439f4e6bf5"
+      checksum: "f99ae9608ca517fed466672a3f6188c554a40f878087c12e1c05a6fad95d7a2b"
     ),
     framework(
       "BareKitJavaScriptCoreFramework",
       asset: "BareKit.JavaScriptCore.xcframework.zip",
-      checksum: "c397ea971bed337f8f0c8fbe4d1b1868fd06ce3c9ea5955b4e831d776a77e3f8"
+      checksum: "b36196c750487a82d12ed253aa9ace4fe312053b1715e3d3b2dd579253eebb27"
     ),
     .target(
       name: "BareKitBridge",
