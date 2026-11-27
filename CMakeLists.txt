@@ -13,7 +13,7 @@ elseif(NOT BARE_KIT_SWIFT_ENGINE STREQUAL "v8")
   message(FATAL_ERROR "Unknown engine '${BARE_KIT_SWIFT_ENGINE}'")
 endif()
 
-fetch_package("github:holepunchto/bare-kit@3.2.1" SOURCE_DIR bare_kit)
+fetch_package("github:holepunchto/bare-kit@3.4.0" SOURCE_DIR bare_kit)
 
 get_target_property(framework bare_kit::shared ALIASED_TARGET)
 
